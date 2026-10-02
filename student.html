@@ -410,32 +410,53 @@ window.verify = async function(e){
   showLoad(true);
   try {
     if (!auth.currentUser) { try { await signInAnonymously(auth); } catch(err) {} }
+
+    // Look up existing student by SDMS code
     const q = query(collection(db,'users'), where('sdms','==',sdms), limit(5));
     const snap = await getDocs(q);
-    const match = snap.docs.find(d => {
-      const r = d.data();
-      return r.role === 'student' &&
-        String(r.name||'').trim().toLowerCase() === name.toLowerCase() &&
-        String(r.class||'').trim().toLowerCase() === cls.toLowerCase();
-    });
-    if (!match){ toast('Could not match those details. Check with your school administrator.', 'error'); return; }
-    const d = match.data();
-    student = { uid: match.id, name: d.name, cls: d.class, sdms };
-    $('dash-name').textContent = d.name;
-    $('dash-greet').textContent = String(d.name).trim().split(/\s+/)[0];
+
+    let uid, existing;
+
+    if (snap.empty){
+      // ✅ First-time enrollment — create the student record
+      uid = 'student_' + sdms;
+      await setDoc(doc(db,'users',uid), {
+        name, class: cls, sdms,
+        role: 'student',
+        points: 0, streak: 0, level: 1,
+        badges: [], quizzesTaken: 0,
+        createdAt: serverTimestamp()
+      });
+      existing = { name, class: cls };
+    } else {
+      // Existing record — verify name + class match
+      const record = snap.docs[0];
+      const r = record.data();
+      if (r.role !== 'student'){
+        toast('This ID is registered to a non-student account.', 'error');
+        return;
+      }
+      if (String(r.name||'').trim().toLowerCase() !== name.toLowerCase() ||
+          String(r.class||'').trim().toLowerCase() !== cls.toLowerCase()){
+        toast('Name or class does not match our records. Check with your administrator.', 'error');
+        return;
+      }
+      uid = record.id;
+      existing = r;
+      // Update in case name/class changed
+      await updateDoc(doc(db,'users',uid), { name, class: cls });
+    }
+
+    student = { uid, name: existing.name || name, cls: existing.class || cls, sdms };
+    $('dash-name').textContent = student.name;
+    $('dash-greet').textContent = String(student.name).trim().split(/\s+/)[0];
     goto('dash');
     loadDash();
-    toast('Welcome, ' + d.name);
+    toast('Welcome, ' + student.name);
   } catch(err){
     console.error(err);
     toast('Verification failed: ' + err.message, 'error');
   } finally { showLoad(false); }
-};
-
-window.signOutStudent = async () => {
-  try { if (auth.currentUser?.isAnonymous) await signOut(auth); } catch(e){}
-  student = null;
-  window.location.href = 'index.html';
 };
 
 // ============================================================
