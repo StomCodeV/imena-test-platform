@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>iMENA Test — Assessment for better learning</title>
+<meta name="description" content="iMENA Test — a thoughtful assessment platform for teachers and learners. Create, deliver, and learn from every assessment." />
+<meta name="theme-color" content="#0a2e1a" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink-900:#050B08;--ink-800:#0A1710;--ink-700:#0F2218;
+  --emerald:#10B981;--emerald-d:#047857;--gold:#D4A24C;--gold-l:#F5D89B;
+  --txt:#ECF3EE;--txt-2:#A8C7B8;--txt-3:#6B9A82;--txt-4:#3D6B52;
+  --border:rgba(168,199,184,0.10);--border-2:rgba(168,199,184,0.18);
+  --font-sans:'Inter',system-ui,sans-serif;
+  --font-serif:'Instrument Serif',Georgia,serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:var(--font-sans);background:var(--ink-900);color:var(--txt);overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.6}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+.font-serif{font-family:var(--font-serif);font-weight:400;letter-spacing:-.02em}
+
+#three-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.85}
+#three-canvas.fallback::before,#three-canvas.fallback::after{
+  content:'';position:absolute;width:60vw;height:60vw;max-width:700px;max-height:700px;border-radius:50%;
+}
+#three-canvas.fallback::before{left:-20vw;top:5vh;background:radial-gradient(circle,rgba(31,111,70,.20),transparent 70%)}
+#three-canvas.fallback::after{right:-22vw;bottom:-25vh;background:radial-gradient(circle,rgba(32,103,92,.16),transparent 70%)}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px;position:relative;z-index:2}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:50;padding:14px 24px;background:rgba(5,11,8,.72);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.nav-inner{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--emerald),var(--emerald-d));display:grid;place-items:center;box-shadow:0 6px 18px rgba(16,185,129,.25);border:1px solid rgba(255,255,255,.1);position:relative;overflow:hidden}
+.brand-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent 55%)}
+.brand-text .l1{font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--txt)}
+.brand-text .l2{font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--txt-4);margin-top:1px}
+.nav-actions{display:flex;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:11px;font-size:13.5px;font-weight:500;transition:all .2s;border:1px solid transparent}
+.btn-primary{background:linear-gradient(135deg,#10B981,#059669);color:#fff;box-shadow:0 6px 18px rgba(16,185,129,.22)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(16,185,129,.32)}
+.btn-secondary{background:rgba(168,199,184,.06);color:var(--txt);border-color:var(--border-2)}
+.btn-secondary:hover{background:rgba(168,199,184,.12);border-color:rgba(168,199,184,.28)}
+.btn-ghost{color:var(--txt-2)}
+.btn-ghost:hover{color:var(--txt);background:rgba(168,199,184,.06)}
+
+/* HERO */
+.hero{padding:clamp(56px,10vh,110px) 0 clamp(60px,10vh,120px)}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(32px,6vw,80px);align-items:center}
+.kicker{display:inline-flex;align-items:center;gap:10px;margin-bottom:24px;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#A8D9AF}
+.kicker-dot{width:7px;height:7px;border-radius:50%;background:var(--gold-l);box-shadow:0 0 14px rgba(245,216,155,.5)}
+.hero h1{font-family:var(--font-serif);font-weight:400;font-size:clamp(46px,6.5vw,80px);line-height:1;letter-spacing:-.05em;color:#F6F8F2;margin-bottom:22px;max-width:660px}
+.hero h1 em{font-style:italic;background:linear-gradient(110deg,#C7E994,#7ED4A5 58%,#84C8D8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-lead{max-width:560px;color:var(--txt-2);font-size:clamp(15px,1.5vw,17px);line-height:1.75;margin-bottom:30px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:26px}
+.hero-actions .btn{padding:14px 22px;font-size:14.5px}
+.hero-values{display:flex;flex-wrap:wrap;gap:10px 22px;color:var(--txt-3);font-size:12px}
+.hero-values span{display:inline-flex;align-items:center;gap:6px}
+.hero-values svg{color:#B9DC9A}
+
+/* PREVIEW CARD */
+.preview{background:linear-gradient(145deg,rgba(25,58,43,.95),rgba(12,33,27,.92));border:1px solid var(--border-2);border-radius:24px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.35);position:relative;overflow:hidden;isolation:isolate}
+.preview-orb{position:absolute;z-index:-1;width:260px;height:260px;right:-70px;top:-90px;border-radius:50%;border:1px solid rgba(197,232,170,.15);background:radial-gradient(circle at 34% 34%,rgba(128,196,130,.35),transparent 70%)}
+.preview-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:22px}
+.preview-head .l1{font-size:9px;font-weight:700;letter-spacing:.15em;color:#A9D4B2}
+.preview-head h3{font-size:20px;font-weight:600;letter-spacing:-.03em;color:#F1F6EE;margin-top:6px}
+.preview-chip{font-size:9px;font-weight:700;letter-spacing:.1em;padding:6px 9px;border:1px solid rgba(217,236,210,.2);border-radius:6px;background:rgba(255,255,255,.05);color:#C4D5C7}
+.preview-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.preview-stat{padding:14px;border:1px solid rgba(219,237,220,.12);border-radius:12px;background:rgba(255,255,255,.05)}
+.preview-stat .lbl{font-size:9px;color:#A6B9AA;margin-bottom:8px;display:block}
+.preview-stat .val{font-size:13px;color:#F5F7F1;font-weight:600;display:block}
+.preview-stat .sub{font-size:9px;color:#9AADA0;margin-top:5px;display:block}
+.preview-progress{height:5px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:10px}
+.preview-progress i{display:block;height:100%;width:68%;border-radius:inherit;background:linear-gradient(90deg,#79BD83,#D9E887)}
+.preview-bars{display:flex;align-items:end;gap:6px;height:90px;padding:12px 4px 0;margin-top:16px}
+.preview-bars span{flex:1;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,rgba(193,227,147,.9),rgba(49,143,105,.35))}
+.preview-foot{display:flex;justify-content:space-between;gap:10px;margin-top:14px;font-size:9px;color:#91A799}
+.preview-foot .live{color:#C7D8C6;display:inline-flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#B6D987}
+
+/* FEATURES */
+.features{padding:20px 0 60px}
+.features-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.feature{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:22px 18px;display:flex;flex-direction:column;gap:14px;transition:all .25s}
+.feature:hover{border-color:var(--border-2);transform:translateY(-2px)}
+.feature-icon{width:38px;height:38px;border-radius:11px;background:rgba(173,214,160,.09);border:1px solid rgba(190,222,190,.15);display:grid;place-items:center;color:#B9DC9A}
+.feature h3{font-size:14px;font-weight:600;letter-spacing:-.01em;color:#EEF4ED}
+.feature p{font-size:12px;color:#AABBB0;line-height:1.65}
+
+/* TRUST */
+.trust{margin:40px auto 0;max-width:900px;padding:14px 18px;border:1px solid rgba(230,207,148,.18);border-radius:12px;background:rgba(83,70,36,.14);display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.65;color:#C4C0A9}
+.trust svg{flex-shrink:0;margin-top:1px;color:#E1CA85}
+
+/* FOOTER */
+.footer{margin-top:60px;padding:28px 24px;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--txt-3)}
+.footer-inner{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:16px}
+.footer a{color:var(--emerald);font-weight:500;display:inline-flex;align-items:center;gap:8px;transition:color .2s}
+.footer a:hover{color:#34D399}
+
+@media (max-width:900px){
+  .hero-grid{grid-template-columns:1fr}
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:600px){
+  .features-grid{grid-template-columns:1fr}
+  .hero-actions .btn{width:100%}
+  .preview-stats{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<div id="three-canvas"></div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-mark"><i data-lucide="graduation-cap" style="width:20px;height:20px;color:#fff;position:relative;z-index:1"></i></div>
+      <div class="brand-text">
+        <div class="l1">iMENA Test</div>
+        <div class="l2">Assessment · Learning</div>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <a href="teacher.html" class="btn btn-ghost"><i data-lucide="layout-dashboard" style="width:16px;height:16px"></i><span style="display:none" class="sm-show">Educator</span>Educator</a>
+      <a href="student.html" class="btn btn-primary"><i data-lucide="graduation-cap" style="width:16px;height:16px"></i>Enter Assessment</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="kicker"><span class="kicker-dot"></span>Assessment for better learning</div>
+        <h1>Make every assessment a <em>clearer</em> step forward.</h1>
+        <p class="hero-lead">Create assessments with purpose, give learners a focused place to respond, and use results to plan what comes next. Designed for classrooms that deserve better tools.</p>
+        <div class="hero-actions">
+          <a href="teacher.html" class="btn btn-primary"><i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>Educator Workspace<i data-lucide="arrow-up-right" style="width:16px;height:16px"></i></a>
+          <a href="student.html" class="btn btn-secondary"><i data-lucide="graduation-cap" style="width:18px;height:18px"></i>Learner Access</a>
+        </div>
+        <div class="hero-values">
+          <span><i data-lucide="check" style="width:14px;height:14px"></i>Teacher-led workflows</span>
+          <span><i data-lucide="check" style="width:14px;height:14px"></i>Enterprise anti-cheat</span>
+          <span><i data-lucide="check" style="width:14px;height:14px"></i>Real-time analytics</span>
+        </div>
+      </div>
+
+      <div class="preview">
+        <div class="preview-orb"></div>
+        <div class="preview-head">
+          <div>
+            <div class="l1">ASSESSMENT OVERVIEW</div>
+            <h3>Class progress</h3>
+          </div>
+          <div class="preview-chip">SAMPLE VIEW</div>
+        </div>
+        <div class="preview-stats">
+          <div class="preview-stat">
+            <span class="lbl">Assessment</span>
+            <span class="val">Fractions &amp; ratios</span>
+            <span class="sub">Mathematics · Grade 8</span>
+          </div>
+          <div class="preview-stat">
+            <span class="lbl">Learning objectives</span>
+            <span class="val">Progress</span>
+            <div class="preview-progress"><i></i></div>
+          </div>
+        </div>
+        <div class="preview-bars">
+          <span style="height:34%"></span><span style="height:48%"></span><span style="height:43%"></span>
+          <span style="height:64%"></span><span style="height:56%"></span><span style="height:78%"></span>
+          <span style="height:70%"></span><span style="height:88%"></span><span style="height:74%"></span>
+          <span style="height:96%"></span><span style="height:83%"></span><span style="height:100%"></span>
+        </div>
+        <div class="preview-foot">
+          <span class="live"><i class="live-dot"></i> Teacher review</span>
+          <span>Illustrative · not live data</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="features-grid">
+      <article class="feature">
+        <div class="feature-icon"><i data-lucide="notebook-pen" style="width:18px;height:18px"></i></div>
+        <h3>Design with intent</h3>
+        <p>Organise questions around subjects, learning objectives, and assessment plans.</p>
+      </article>
+      <article class="feature">
+        <div class="feature-icon"><i data-lucide="shield-check" style="width:18px;height:18px"></i></div>
+        <h3>Enterprise integrity</h3>
+        <p>Full-proctoring suite detects tab-switching, focus loss, copy, devtools, and more.</p>
+      </article>
+      <article class="feature">
+        <div class="feature-icon"><i data-lucide="bar-chart-3" style="width:18px;height:18px"></i></div>
+        <h3>Respond with insight</h3>
+        <p>Item-level analytics reveal exactly which topics need further teaching.</p>
+      </article>
+      <article class="feature">
+        <div class="feature-icon"><i data-lucide="accessibility" style="width:18px;height:18px"></i></div>
+        <h3>Human-centered</h3>
+        <p>Readable, mobile-friendly, accessible interactions with review workflows.</p>
+      </article>
+    </div>
+
+    <div class="trust">
+      <i data-lucide="info" style="width:16px;height:16px"></i>
+      <span>iMENA Test is an independent product. No approval, endorsement, accreditation, or official adoption by REB, MINEDUC, or another government institution is claimed.</span>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>© 2026 iMENA Test</span>
+    <span style="opacity:.4">·</span>
+    <span>Designed &amp; engineered by</span>
+    <a href="https://imena-lab.vercel.app/" target="_blank" rel="noopener noreferrer">
+      <img src="https://i.postimg.cc/wxG9tFrx/i-MENA-Test.png" alt="iMENA Lab" style="height:22px" />
+      iMENA Lab
+    </a>
+  </div>
+</footer>
+
+<script>
+// Light 3D background — subtle, performant, respects reduced-motion
+(function initBackground(){
+  const c = document.getElementById('three-canvas');
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const compact = window.matchMedia('(max-width: 760px)').matches;
+  const lowMem = typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
+  if (!window.THREE || prefersReduce || compact || lowMem || !window.WebGLRenderingContext) {
+    c.classList.add('fallback');
+    return;
+  }
+  try {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1a0f);
+    scene.fog = new THREE.Fog(0x0a1a0f, 20, 55);
+
+    const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, .1, 100);
+    camera.position.set(0, 4, 14);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'low-power' });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
+    c.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0x2d5a3a, .7));
+    const sun = new THREE.DirectionalLight(0xffeedd, 1.2); sun.position.set(15,25,10); scene.add(sun);
+    const fill = new THREE.DirectionalLight(0x88ddff, .35); fill.position.set(-15,5,15); scene.add(fill);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(90,90),
+      new THREE.MeshStandardMaterial({ color:0x1a3a2a, roughness:.95, transparent:true, opacity:.6 })
+    );
+    ground.rotation.x = -Math.PI/2; ground.position.y = -0.6; scene.add(ground);
+
+    function createTree(x,z,s){
+      const g = new THREE.Group();
+      const th = (1.2 + Math.random()*.8) * s;
+      const tr = (.08 + Math.random()*.06) * s;
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(tr*.6, tr, th, 6),
+        new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(.07,.6,.15), roughness:.9 })
+      );
+      trunk.position.y = th/2; g.add(trunk);
+      const cm = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL(.28 + Math.random()*.06, .5, .2 + Math.random()*.15),
+        roughness: .8
+      });
+      const layers = 3 + Math.floor(Math.random()*3);
+      for (let l=0; l<layers; l++){
+        const ly = th*.6 + (l/layers)*th*.5;
+        const lr = tr * (2.5 + (layers-l)*1.2);
+        const sc = 4 + Math.floor(Math.random()*4);
+        for (let i=0; i<sc; i++){
+          const ang = (i/sc)*Math.PI*2;
+          const r = lr * (.5 + Math.random()*.5);
+          const sp = new THREE.Mesh(new THREE.SphereGeometry(r*.35, 5, 5), cm);
+          sp.position.set(Math.cos(ang)*r*.7, ly + (Math.random()-.5)*r*.8, Math.sin(ang)*r*.7);
+          g.add(sp);
+        }
+      }
+      g.position.set(x, -.3, z);
+      return g;
+    }
+
+    const positions = [];
+    for (let i=0; i<70; i++){
+      const ang = Math.random()*Math.PI*2;
+      const rad = 2 + Math.random()*13;
+      const x = Math.cos(ang)*rad, z = Math.sin(ang)*rad;
+      let close = false;
+      for (const p of positions){ if (Math.hypot(x-p[0], z-p[1]) < 1) { close = true; break; } }
+      if (close) continue;
+      positions.push([x,z]);
+      scene.add(createTree(x, z, .6 + Math.random()*.8));
+    }
+
+    // Light motes
+    const pc = 140;
+    const pg = new THREE.BufferGeometry();
+    const pp = new Float32Array(pc*3);
+    for (let i=0; i<pc; i++){
+      const r = 1 + Math.random()*15;
+      const a = Math.random()*Math.PI*2;
+      pp[i*3] = Math.cos(a)*r;
+      pp[i*3+1] = Math.random()*7 - 1;
+      pp[i*3+2] = Math.sin(a)*r;
+    }
+    pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+    const particles = new THREE.Points(pg, new THREE.PointsMaterial({
+      color: 0x88ffaa, size: .12, transparent: true, opacity: .5,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    scene.add(particles);
+
+    let mx=0, my=0;
+    document.addEventListener('mousemove', e => {
+      mx = (e.clientX/innerWidth)*2 - 1;
+      my = -(e.clientY/innerHeight)*2 + 1;
+    });
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    let t = 0, last = 0, raf = null;
+    function loop(now){
+      raf = requestAnimationFrame(loop);
+      if (document.hidden) return;
+      if (now - last < 33) return;
+      last = now; t += .003;
+      camera.position.x += (mx*3 - camera.position.x) * .02;
+      camera.position.y += (my*1.5 + 3 - camera.position.y) * .02;
+      camera.lookAt(0,0,0);
+      const arr = particles.geometry.attributes.position.array;
+      for (let i=0; i<pc; i++){
+        const idx = i*3;
+        const ang = Math.atan2(arr[idx+2], arr[idx]);
+        const r = Math.hypot(arr[idx], arr[idx+2]);
+        const na = ang + .001;
+        arr[idx] = Math.cos(na)*r;
+        arr[idx+2] = Math.sin(na)*r;
+        arr[idx+1] += Math.sin(t + i) * .001;
+      }
+      particles.geometry.attributes.position.needsUpdate = true;
+      renderer.render(scene, camera);
+    }
+    raf = requestAnimationFrame(loop);
+  } catch(e){
+    c.classList.add('fallback');
+    console.warn('3D background fallback', e);
+  }
+})();
+
+lucide.createIcons();
+</script>
+</body>
+</html>

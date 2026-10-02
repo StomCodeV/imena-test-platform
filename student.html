@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Student Portal — iMENA Test</title>
+<meta name="theme-color" content="#0a2e1a" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{ "imports": {
+  "firebase/app": "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js",
+  "firebase/auth": "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js",
+  "firebase/firestore": "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js",
+  "firebase/storage": "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js"
+}}
+</script>
+
+<style>
+:root{
+  --ink-900:#050B08;--ink-800:#0A1710;--ink-700:#0F2218;
+  --emerald:#10B981;--emerald-d:#047857;--gold:#D4A24C;--gold-l:#F5D89B;
+  --txt:#ECF3EE;--txt-2:#A8C7B8;--txt-3:#6B9A82;--txt-4:#3D6B52;
+  --border:rgba(168,199,184,0.10);--border-2:rgba(168,199,184,0.20);
+  --font-sans:'Inter',system-ui,sans-serif;
+  --font-serif:'Instrument Serif',Georgia,serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:var(--font-sans);background:var(--ink-900);color:var(--txt);overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.6}
+.font-serif{font-family:var(--font-serif);font-weight:400;letter-spacing:-.02em}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:rgba(168,199,184,.18);border-radius:3px}
+
+.hidden{display:none !important}
+
+/* bg */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6;background:
+  radial-gradient(ellipse at 15% 10%,rgba(16,185,129,.08),transparent 50%),
+  radial-gradient(ellipse at 85% 90%,rgba(212,162,76,.05),transparent 55%),
+  #050B08}
+body.exam-mode #bg{opacity:0}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-weight:500;font-size:.875rem;padding:.7rem 1.2rem;border-radius:11px;transition:all .2s;border:1px solid transparent;white-space:nowrap}
+.btn-primary{background:linear-gradient(180deg,#10B981 0%,#059669 100%);color:#fff;box-shadow:0 6px 18px rgba(16,185,129,.22)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(16,185,129,.32)}
+.btn-secondary{background:rgba(168,199,184,.06);color:var(--txt);border-color:var(--border-2)}
+.btn-secondary:hover{background:rgba(168,199,184,.12)}
+.btn-ghost{color:var(--txt-2)}
+.btn-ghost:hover{color:var(--txt);background:rgba(168,199,184,.08)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none !important}
+
+.field-label{display:block;font-size:.78rem;font-weight:500;color:var(--txt-2);margin-bottom:.4rem}
+.input-field{width:100%;background:rgba(5,11,8,.55);border:1px solid var(--border-2);border-radius:10px;padding:.75rem 1rem;color:var(--txt);font-size:.9rem;transition:all .15s}
+.input-field::placeholder{color:var(--txt-4)}
+.input-field:focus{outline:none;border-color:var(--emerald);background:rgba(5,11,8,.75);box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+
+/* Layout */
+.page{position:relative;z-index:2;min-height:100vh}
+.center{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.card{background:linear-gradient(180deg,rgba(27,56,42,.85),rgba(11,26,18,.95));border:1px solid var(--border-2);border-radius:20px;padding:40px;max-width:520px;width:100%;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.surface{background:linear-gradient(180deg,rgba(20,43,31,.7),rgba(10,23,16,.85));border:1px solid var(--border);border-radius:14px}
+.surface-flat{background:rgba(15,34,24,.55);border:1px solid var(--border);border-radius:10px}
+
+/* Top bar */
+.topbar{position:sticky;top:0;z-index:30;padding:14px 24px;background:rgba(5,11,8,.75);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--emerald),var(--emerald-d));display:grid;place-items:center;box-shadow:0 6px 16px rgba(16,185,129,.25);position:relative;overflow:hidden}
+.brand-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent 55%)}
+.brand-text{font-size:14px;font-weight:600;letter-spacing:-.015em}
+
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px}
+.hero-title{font-family:var(--font-serif);font-size:44px;letter-spacing:-.03em;line-height:1.05;margin-bottom:8px}
+.hero-sub{color:var(--txt-3);font-size:14px;margin-bottom:28px}
+
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:28px}
+.stat-cell{background:rgba(15,34,24,.55);padding:16px 18px}
+.stat-cell .lbl{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--txt-4);font-weight:700;margin-bottom:8px}
+.stat-cell .val{font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+.code-entry{background:linear-gradient(180deg,rgba(20,43,31,.7),rgba(10,23,16,.85));border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px;display:flex;gap:12px;flex-wrap:wrap}
+.code-entry input{flex:1;min-width:180px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.3em;text-align:center;font-size:18px;padding:.85rem 1rem}
+
+.list-item{background:linear-gradient(180deg,rgba(20,43,31,.7),rgba(10,23,16,.85));border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;transition:all .2s}
+.list-item:hover{border-color:var(--border-2);transform:translateY(-1px)}
+
+.section-title{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* ============================
+   QUIZ TAKING - Exam mode
+   ============================ */
+.exam-wrap{min-height:100vh;display:flex;flex-direction:column;background:var(--ink-900)}
+.exam-topbar{padding:14px 24px;background:rgba(5,11,8,.85);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0;position:sticky;top:0;z-index:30}
+.exam-progress{font-size:11px;color:var(--txt-3);letter-spacing:.06em}
+.exam-title{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.exam-timer{padding:8px 14px;border-radius:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:14px;font-weight:600;color:#34D399}
+.exam-timer.warning{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.3);color:#FCA5A5}
+.exam-strikes{padding:6px 12px;border-radius:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);font-size:11.5px;font-weight:600;color:#FCD34D;display:inline-flex;align-items:center;gap:6px}
+
+.exam-body{flex:1;padding:32px 24px;display:flex;justify-content:center;overflow-y:auto}
+.exam-inner{width:100%;max-width:740px}
+.question-card{background:linear-gradient(180deg,rgba(27,56,42,.85),rgba(11,26,18,.95));border:1px solid var(--border-2);border-radius:20px;padding:32px;margin-bottom:24px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.question-num{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#34D399;font-weight:700;margin-bottom:12px}
+.question-text{font-size:clamp(17px,2.2vw,20px);font-weight:500;line-height:1.5;letter-spacing:-.015em;color:#F6F8F2}
+
+/* Options */
+.opt{display:flex;align-items:flex-start;gap:14px;width:100%;text-align:left;padding:16px 20px;background:rgba(20,43,31,.5);border:1.5px solid var(--border-2);border-radius:12px;color:var(--txt);font-size:15px;transition:all .15s;font-family:inherit;margin-bottom:10px}
+.opt:hover{background:rgba(20,43,31,.8);border-color:rgba(16,185,129,.4)}
+.opt.selected{background:rgba(16,185,129,.14);border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.1)}
+.opt-letter{width:30px;height:30px;border-radius:8px;background:rgba(168,199,184,.1);display:grid;place-items:center;font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--txt-2);flex-shrink:0}
+.opt.selected .opt-letter{background:#10B981;color:#fff}
+.opt-text{flex:1;line-height:1.5;padding-top:3px}
+
+/* Nav */
+.exam-nav{display:flex;justify-content:space-between;gap:12px;align-items:center}
+
+/* ============================
+   LOCKDOWN OVERLAY
+   ============================ */
+.lockdown{position:fixed;inset:0;z-index:999998;background:rgba(5,11,8,.97);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);display:none;align-items:center;justify-content:center;padding:24px}
+.lockdown.active{display:flex;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.lockdown-card{max-width:520px;width:100%;background:linear-gradient(180deg,rgba(27,56,42,.98),rgba(11,26,18,1));border:1px solid rgba(220,38,38,.4);border-radius:22px;padding:40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(220,38,38,.15) inset}
+.lockdown-icon{width:80px;height:80px;border-radius:50%;background:rgba(220,38,38,.15);border:2px solid rgba(220,38,38,.45);display:grid;place-items:center;margin:0 auto 24px;animation:pulse 1.6s ease infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}50%{box-shadow:0 0 0 20px rgba(220,38,38,0)}}
+.lockdown-title{font-family:var(--font-serif);font-size:28px;letter-spacing:-.02em;color:#F6F8F2;margin-bottom:10px}
+.lockdown-reason{font-size:14px;color:#FCA5A5;line-height:1.6;margin-bottom:24px;padding:14px;border-radius:12px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.22)}
+.lockdown-timer{font-family:var(--font-mono);font-size:64px;font-weight:700;letter-spacing:-.03em;color:#F59E0B;font-variant-numeric:tabular-nums;margin:20px 0;line-height:1}
+.lockdown-hint{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--txt-4);font-weight:700}
+.strikes{display:flex;justify-content:center;gap:9px;margin-top:24px}
+.strike{width:12px;height:12px;border-radius:50%;background:rgba(168,199,184,.14);border:1px solid rgba(168,199,184,.25)}
+.strike.on{background:#DC2626;border-color:#FCA5A5;box-shadow:0 0 12px rgba(220,38,38,.7)}
+
+/* Rules overlay */
+.rules-overlay{position:fixed;inset:0;z-index:9998;background:rgba(5,11,8,.9);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;padding:24px}
+.rules-card{max-width:600px;width:100%;background:linear-gradient(180deg,rgba(27,56,42,.95),rgba(11,26,18,.98));border:1px solid var(--border-2);border-radius:22px;padding:36px;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.rule-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--txt-2)}
+.rule-row:last-child{border-bottom:none}
+.rule-row svg{color:#34D399;flex-shrink:0;margin-top:3px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:10000;padding:14px 18px;border-radius:12px;background:rgba(15,34,24,.96);border:1px solid var(--border-2);backdrop-filter:blur(20px);box-shadow:0 24px 60px rgba(0,0,0,.6);display:flex;align-items:center;gap:12px;font-size:13.5px;color:var(--txt);max-width:400px;animation:slideIn .3s}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast.error{border-color:rgba(220,38,38,.4)}
+.toast.success{border-color:rgba(16,185,129,.35)}
+
+.loader{position:fixed;inset:0;z-index:99999;background:rgba(5,11,8,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center}
+.spinner{width:40px;height:40px;border:3px solid rgba(168,199,184,.12);border-top-color:#10B981;border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.fade{animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media (max-width:640px){
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .hero-title{font-size:32px}
+  .question-card{padding:22px}
+  .card{padding:26px}
+  .exam-body{padding:20px 14px}
+  .toast{left:16px;right:16px;bottom:16px;max-width:none}
+}
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="loader" class="loader hidden"><div class="spinner"></div></div>
+
+<!-- ==================== VERIFY ==================== -->
+<div id="page-verify" class="page">
+  <div class="center">
+    <div class="card fade">
+      <div class="brand-mark" style="width:52px;height:52px;margin-bottom:22px"><i data-lucide="user-check" style="width:24px;height:24px;color:#fff;position:relative;z-index:1"></i></div>
+      <h1 class="font-serif" style="font-size:32px;letter-spacing:-.03em;margin-bottom:8px">Candidate Verification</h1>
+      <p style="color:var(--txt-3);font-size:14px;margin-bottom:28px">Use the name, class, and learner code held by your school.</p>
+      <form onsubmit="verify(event)">
+        <div style="margin-bottom:14px"><label class="field-label">Full Name</label><input id="v-name" type="text" required class="input-field" placeholder="e.g. Amina Uwase" /></div>
+        <div style="margin-bottom:14px"><label class="field-label">Class / Grade</label><input id="v-class" type="text" required class="input-field" placeholder="e.g. S3A" /></div>
+        <div style="margin-bottom:22px"><label class="field-label">Candidate ID</label><input id="v-sdms" type="text" required class="input-field" style="font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.05em" placeholder="STU-2026-0001" /></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:14px"><span>Verify Identity</span><i data-lucide="arrow-right" style="width:16px;height:16px"></i></button>
+      </form>
+      <div style="text-align:center;margin-top:24px;font-size:12.5px;color:var(--txt-4)"><a href="index.html">← Back to home</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DASHBOARD ==================== -->
+<div id="page-dash" class="page hidden">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><i data-lucide="graduation-cap" style="width:18px;height:18px;color:#fff;position:relative;z-index:1"></i></div>
+      <span class="brand-text">iMENA Test</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--txt-3)" id="dash-name">—</span>
+      <button onclick="signOutStudent()" class="btn btn-ghost" style="font-size:12px"><i data-lucide="log-out" style="width:14px;height:14px"></i>Exit</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1 class="hero-title">Welcome, <span id="dash-greet" style="color:#34D399">candidate</span></h1>
+    <p class="hero-sub">Enter an assessment code from your educator to begin.</p>
+
+    <div class="stat-row">
+      <div class="stat-cell"><div class="lbl">Points</div><div class="val" style="color:#34D399" id="s-points">0</div></div>
+      <div class="stat-cell"><div class="lbl">Streak</div><div class="val" style="color:var(--gold-l)" id="s-streak">0</div></div>
+      <div class="stat-cell"><div class="lbl">Level</div><div class="val" style="color:#A8C7B8" id="s-level">1</div></div>
+      <div class="stat-cell"><div class="lbl">Completed</div><div class="val" id="s-taken">0</div></div>
+    </div>
+
+    <div class="code-entry">
+      <input id="code-input" type="text" maxlength="6" required placeholder="······" />
+      <button onclick="joinByCode()" class="btn btn-primary" style="padding:12px 24px"><span>Begin</span><i data-lucide="arrow-right" style="width:16px;height:16px"></i></button>
+    </div>
+
+    <div style="margin-bottom:28px">
+      <div class="section-title"><i data-lucide="book-open" style="width:16px;height:16px;color:#34D399"></i>Scheduled Assessments</div>
+      <div id="quiz-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div id="quiz-empty" class="surface" style="padding:44px;text-align:center"><i data-lucide="calendar" style="width:28px;height:28px;color:var(--txt-4);margin:0 auto 10px;display:block"></i><p style="color:var(--txt-3);font-size:13px">No assessments scheduled</p></div>
+    </div>
+
+    <div style="margin-bottom:28px">
+      <div class="section-title"><i data-lucide="bar-chart-2" style="width:16px;height:16px;color:#34D399"></i>Recent Results</div>
+      <div id="result-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div id="result-empty" class="surface" style="padding:44px;text-align:center"><i data-lucide="award" style="width:28px;height:28px;color:var(--txt-4);margin:0 auto 10px;display:block"></i><p style="color:var(--txt-3);font-size:13px">No results yet</p></div>
+    </div>
+
+    <div>
+      <div class="section-title"><i data-lucide="trophy" style="width:16px;height:16px;color:var(--gold-l)"></i>Leaderboard</div>
+      <div class="surface" style="padding:16px" id="leaderboard"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== EXAM ==================== -->
+<div id="page-exam" class="page hidden" style="background:var(--ink-900);min-height:100vh">
+  <div class="exam-topbar">
+    <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">
+      <div style="width:8px;height:8px;border-radius:50%;background:#34D399;animation:pulse 1.5s infinite;flex-shrink:0"></div>
+      <div style="min-width:0">
+        <div class="exam-title" id="ex-title">—</div>
+        <div class="exam-progress" id="ex-progress">Q1 of N</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <div id="ex-strikes" class="exam-strikes hidden">⚠️ <span id="ex-strikes-n">0</span></div>
+      <div id="ex-timer" class="exam-timer hidden"><i data-lucide="clock" style="width:14px;height:14px"></i><span id="ex-time">--:--</span></div>
+    </div>
+  </div>
+  <div class="exam-body">
+    <div class="exam-inner">
+      <div id="q-display" class="question-card"></div>
+      <div class="exam-nav">
+        <button id="btn-prev" class="btn btn-secondary hidden" onclick="prevQ()"><i data-lucide="arrow-left" style="width:14px;height:14px"></i>Previous</button>
+        <div style="flex:1"></div>
+        <button id="btn-hint" class="btn btn-ghost hidden" onclick="showHint()"><i data-lucide="lightbulb" style="width:14px;height:14px"></i>Hint</button>
+        <button id="btn-next" class="btn btn-primary" onclick="nextQ()">Next<i data-lucide="arrow-right" style="width:14px;height:14px"></i></button>
+        <button id="btn-submit" class="btn btn-primary hidden" onclick="submitExam()"><i data-lucide="check" style="width:14px;height:14px"></i>Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RESULT ==================== -->
+<div id="page-result" class="page hidden">
+  <div class="center">
+    <div class="card fade" style="max-width:520px;text-align:center">
+      <div id="r-icon" style="width:80px;height:80px;border-radius:50%;margin:0 auto 22px;display:grid;place-items:center;background:rgba(16,185,129,.12)"></div>
+      <div style="font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#34D399;font-weight:700;margin-bottom:10px">Assessment Complete</div>
+      <h2 class="font-serif" id="r-quiz" style="font-size:26px;letter-spacing:-.02em;margin-bottom:6px">—</h2>
+      <div id="r-score" style="font-size:64px;font-weight:700;letter-spacing:-.03em;line-height:1;margin:24px 0;font-variant-numeric:tabular-nums">0%</div>
+      <div id="r-status" style="font-size:16px;font-weight:600;margin-bottom:16px"></div>
+      <div class="surface-flat" style="padding:16px;text-align:left;font-size:13.5px;color:var(--txt-2);margin-bottom:20px" id="r-feedback"></div>
+      <div style="padding:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.22);border-radius:10px;font-size:11.5px;color:#FCD34D;line-height:1.6;margin-bottom:20px">
+        Provisional browser-calculated score. Not official until validated by your educator.
+      </div>
+      <button onclick="goHome()" class="btn btn-primary" style="width:100%;padding:14px">Return to Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RULES OVERLAY ==================== -->
+<div id="rules-overlay" class="rules-overlay hidden">
+  <div class="rules-card fade">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div style="width:48px;height:48px;border-radius:14px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.22);display:grid;place-items:center;flex-shrink:0"><i data-lucide="shield-check" style="width:22px;height:22px;color:#34D399"></i></div>
+      <div>
+        <div style="font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#34D399;font-weight:700">Examination Policy</div>
+        <h2 class="font-serif" style="font-size:24px;margin-top:4px">Before you begin</h2>
+      </div>
+    </div>
+    <div id="rules-list" style="margin-bottom:20px"></div>
+    <label style="display:flex;gap:12px;padding:14px;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15);border-radius:10px;cursor:pointer;margin-bottom:20px">
+      <input type="checkbox" id="rules-agree" style="width:16px;height:16px;margin-top:2px;accent-color:#10B981;flex-shrink:0" />
+      <span style="font-size:13px;color:var(--txt-2);line-height:1.55">I have read and understood the examination policy. I agree to complete this assessment with academic integrity.</span>
+    </label>
+    <div style="display:flex;gap:10px">
+      <button onclick="declineRules()" class="btn btn-secondary" style="flex:1">Cancel</button>
+      <button onclick="acceptRules()" class="btn btn-primary" style="flex:1">Accept &amp; Begin</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LOCKDOWN OVERLAY ==================== -->
+<div id="lockdown" class="lockdown">
+  <div class="lockdown-card">
+    <div class="lockdown-icon"><i data-lucide="shield-alert" style="width:36px;height:36px;color:#FCA5A5"></i></div>
+    <div class="lockdown-title">Assessment Locked</div>
+    <div class="lockdown-reason" id="lockdown-reason">A security violation was detected.</div>
+    <div class="lockdown-hint">Unlocks in</div>
+    <div class="lockdown-timer" id="lockdown-timer">30</div>
+    <div class="strikes" id="lockdown-strikes">
+      <div class="strike"></div><div class="strike"></div><div class="strike"></div><div class="strike"></div><div class="strike"></div>
+    </div>
+    <div style="margin-top:24px;font-size:11.5px;color:var(--txt-4);line-height:1.6">
+      Repeated violations will automatically submit your assessment and flag it for educator review.
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+// ============================================================
+// FIREBASE
+// ============================================================
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously, signOut } from "firebase/auth";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, query, where, orderBy, onSnapshot, updateDoc, increment, serverTimestamp, limit } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC48GEvgar83RAjWICP3ByM_IKmyZS05Eo",
+  authDomain: "imena-test.firebaseapp.com",
+  projectId: "imena-test",
+  storageBucket: "imena-test.firebasestorage.app",
+  messagingSenderId: "248158119659",
+  appId: "1:248158119659:web:dc7866e0f87ac6526580ae"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ============================================================
+// STATE
+// ============================================================
+let student = null;
+let quiz = null;
+let qIdx = 0;
+let answers = [];
+let timerInt = null;
+let timeLeft = 0;
+let submitInProgress = false;
+let unsubs = [];
+const $ = id => document.getElementById(id);
+
+// Anti-cheat
+const AC = {
+  active: false,
+  strikes: 0,
+  maxStrikes: 5,
+  locked: false,
+  lockTimer: null,
+  lastViolation: 0,
+  cooldownMs: 1500,
+  events: [],
+  qStart: {},
+  fastAnswers: 0
+};
+
+function esc(s){ if(!s) return ''; return String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+function toast(msg, type='success'){
+  const c = $('toast-container');
+  const d = document.createElement('div');
+  d.className = 'toast ' + (type === 'error' ? 'error' : 'success');
+  const color = type === 'error' ? '#FCA5A5' : '#34D399';
+  d.innerHTML = `<i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}" style="width:16px;height:16px;color:${color};flex-shrink:0"></i><span>${esc(msg)}</span>`;
+  c.appendChild(d);
+  if(window.lucide) lucide.createIcons();
+  setTimeout(() => { d.style.opacity = '0'; d.style.transform = 'translateX(20px)'; setTimeout(() => d.remove(), 300); }, 4000);
+}
+function showLoad(s){ $('loader').classList.toggle('hidden', !s); }
+function goto(p){
+  ['verify', 'dash', 'exam', 'result'].forEach(x => $('page-' + x).classList.add('hidden'));
+  $('page-' + p).classList.remove('hidden');
+  $('page-' + p).classList.add('fade');
+  document.body.classList.toggle('exam-mode', p === 'exam');
+}
+
+// ============================================================
+// VERIFY
+// ============================================================
+window.verify = async function(e){
+  e.preventDefault();
+  const name = $('v-name').value.trim();
+  const cls = $('v-class').value.trim();
+  const sdms = $('v-sdms').value.trim();
+  if (!name || !cls || !sdms){ toast('Please complete all fields', 'error'); return; }
+  showLoad(true);
+  try {
+    if (!auth.currentUser) { try { await signInAnonymously(auth); } catch(err) {} }
+    const q = query(collection(db,'users'), where('sdms','==',sdms), limit(5));
+    const snap = await getDocs(q);
+    const match = snap.docs.find(d => {
+      const r = d.data();
+      return r.role === 'student' &&
+        String(r.name||'').trim().toLowerCase() === name.toLowerCase() &&
+        String(r.class||'').trim().toLowerCase() === cls.toLowerCase();
+    });
+    if (!match){ toast('Could not match those details. Check with your school administrator.', 'error'); return; }
+    const d = match.data();
+    student = { uid: match.id, name: d.name, cls: d.class, sdms };
+    $('dash-name').textContent = d.name;
+    $('dash-greet').textContent = String(d.name).trim().split(/\s+/)[0];
+    goto('dash');
+    loadDash();
+    toast('Welcome, ' + d.name);
+  } catch(err){
+    console.error(err);
+    toast('Verification failed: ' + err.message, 'error');
+  } finally { showLoad(false); }
+};
+
+window.signOutStudent = async () => {
+  try { if (auth.currentUser?.isAnonymous) await signOut(auth); } catch(e){}
+  student = null;
+  window.location.href = 'index.html';
+};
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function loadDash(){
+  if (!student) return;
+  unsubs.forEach(fn => fn()); unsubs = [];
+
+  // profile stats
+  (async () => {
+    const s = await getDoc(doc(db,'users',student.uid));
+    if (s.exists()){
+      const d = s.data();
+      $('s-points').textContent = d.points || 0;
+      $('s-streak').textContent = d.streak || 0;
+      $('s-level').textContent = d.level || 1;
+      $('s-taken').textContent = d.quizzesTaken || 0;
+    }
+  })();
+
+  // available quizzes
+  const q1 = query(collection(db,'quizzes'), orderBy('createdAt','desc'));
+  const un1 = onSnapshot(q1, snap => {
+    const list = $('quiz-list'), empty = $('quiz-empty');
+    if (snap.empty){ list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    list.innerHTML = snap.docs.map(d => {
+      const q = d.data();
+      return `<div class="list-item">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:14px;font-weight:600;margin-bottom:3px">${esc(q.title)}</div>
+          <div style="font-size:12px;color:var(--txt-3)">${esc(q.subject)} · ${q.questions?.length||0} questions · ${q.timeLimit ? q.timeLimit + ' min' : 'Untimed'}</div>
+        </div>
+        <button onclick="startQuiz('${d.id}')" class="btn btn-primary" style="font-size:12.5px">Begin</button>
+      </div>`;
+    }).join('');
+    if(window.lucide) lucide.createIcons();
+  });
+  unsubs.push(un1);
+
+  // results
+  const q2 = query(collection(db,'submissions'), where('studentId','==',student.uid), orderBy('date','desc'));
+  const un2 = onSnapshot(q2, snap => {
+    const list = $('result-list'), empty = $('result-empty');
+    if (snap.empty){ list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    list.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const p = (r.percentage || 0) >= 50;
+      return `<div class="list-item">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:14px;font-weight:600;margin-bottom:3px">${esc(r.quizTitle)}</div>
+          <div style="font-size:12px;color:var(--txt-3)">${r.date?.toDate?.().toLocaleDateString() || '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px;font-weight:700;color:${p ? '#34D399' : '#FCA5A5'}">${r.percentage}%</span>
+          <button onclick="viewReport('${d.id}')" class="btn btn-secondary" style="font-size:12px">Details</button>
+        </div>
+      </div>`;
+    }).join('');
+    if(window.lucide) lucide.createIcons();
+  });
+  unsubs.push(un2);
+
+  // leaderboard
+  const q3 = query(collection(db,'users'), where('role','==','student'), orderBy('points','desc'), limit(10));
+  const un3 = onSnapshot(q3, snap => {
+    const l = $('leaderboard');
+    if (snap.empty){ l.innerHTML = '<p style="color:var(--txt-3);text-align:center;font-size:13px">Leaderboard empty</p>'; return; }
+    l.innerHTML = snap.docs.map((d,i) => {
+      const u = d.data();
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i+1).padStart(2,'0');
+      return `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px">
+        <span style="display:flex;align-items:center;gap:12px"><span style="width:26px;color:var(--txt-4);font-family:var(--font-mono);font-size:12px">${medal}</span><span style="color:var(--txt-2)">${esc(u.name)}</span></span>
+        <span style="color:#34D399;font-weight:600;font-variant-numeric:tabular-nums">${u.points||0}</span>
+      </div>`;
+    }).join('');
+  });
+  unsubs.push(un3);
+}
+
+window.joinByCode = async () => {
+  const c = $('code-input').value.trim().toUpperCase();
+  if (!c){ toast('Enter a code', 'error'); return; }
+  showLoad(true);
+  try {
+    const s = await getDocs(query(collection(db,'quizzes'), where('code','==',c)));
+    if (s.empty){ toast('Assessment not found', 'error'); return; }
+    startQuiz(s.docs[0].id);
+  } catch(err){ toast('Error: ' + err.message, 'error'); }
+  finally { showLoad(false); }
+};
+
+window.startQuiz = async id => {
+  showLoad(true);
+  try {
+    const s = await getDoc(doc(db,'quizzes',id));
+    if (!s.exists()){ toast('Not found', 'error'); return; }
+    quiz = { id: s.id, ...s.data() };
+    showRules(quiz);
+  } catch(err){ toast('Error: ' + err.message, 'error'); }
+  finally { showLoad(false); }
+};
+
+// ============================================================
+// RULES
+// ============================================================
+function showRules(q){
+  const rules = [
+    `Duration: ${q.timeLimit ? q.timeLimit + ' minutes' : 'Untimed'}`,
+    `${q.questions?.length || 0} questions · Passing threshold ${q.passingMark}%`,
+    'Tab-switching and window changes are monitored',
+    'Copy, paste, and right-click are disabled',
+    'Fullscreen mode will be enforced',
+    'All activity is logged for integrity review',
+    q.proctoring !== false ? 'Proctoring is ACTIVE — violations may invalidate your submission' : 'Proctoring disabled'
+  ];
+  $('rules-list').innerHTML = rules.map(r => `<div class="rule-row"><i data-lucide="check" style="width:14px;height:14px"></i><span>${esc(r)}</span></div>`).join('');
+  $('rules-overlay').classList.remove('hidden');
+  $('rules-agree').checked = false;
+  if(window.lucide) lucide.createIcons();
+}
+
+window.acceptRules = () => {
+  if (!$('rules-agree').checked){ toast('Please accept the policy', 'error'); return; }
+  $('rules-overlay').classList.add('hidden');
+  beginExam();
+};
+window.declineRules = () => { $('rules-overlay').classList.add('hidden'); quiz = null; };
+
+// ============================================================
+// EXAM
+// ============================================================
+function beginExam(){
+  const shuffled = [...quiz.questions];
+  if (quiz.shuffle) shuffled.sort(() => Math.random() - 0.5);
+  quiz.questions = shuffled;
+  answers = new Array(shuffled.length).fill(null);
+  qIdx = 0;
+  AC.strikes = 0;
+  AC.events = [];
+  AC.qStart = {};
+  AC.fastAnswers = 0;
+  submitInProgress = false;
+
+  $('ex-title').textContent = quiz.title;
+  $('ex-strikes').classList.add('hidden');
+  goto('exam');
+  renderQ();
+  AC.qStart[0] = Date.now();
+
+  if (quiz.timeLimit > 0) startTimer(quiz.timeLimit * 60);
+  else $('ex-timer').classList.add('hidden');
+
+  if (quiz.proctoring !== false) attachAntiCheat(quiz);
+}
+
+function startTimer(sec){
+  timeLeft = sec;
+  $('ex-timer').classList.remove('hidden');
+  updateTimerUI();
+  timerInt = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
+    if (timeLeft <= 0){
+      clearInterval(timerInt);
+      toast('Time expired — auto-submitting', 'error');
+      submitExam();
+    }
+  }, 1000);
+}
+function updateTimerUI(){
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  $('ex-time').textContent = m + ':' + String(s).padStart(2,'0');
+  $('ex-timer').classList.toggle('warning', timeLeft < 60);
+}
+
+function renderQ(){
+  const q = quiz.questions[qIdx];
+  const total = quiz.questions.length;
+  $('ex-progress').textContent = `Q${qIdx+1} of ${total}`;
+
+  let html = `<div class="question-num">Question ${qIdx+1} of ${total}</div>
+    <p class="question-text">${esc(q.text)}</p>`;
+
+  const a = answers[qIdx];
+
+  if (q.type === 'multiple' || q.type === 'truefalse'){
+    html += '<div style="margin-top:22px">';
+    q.options.forEach((o, i) => {
+      const letter = q.type === 'multiple' ? String.fromCharCode(65+i) : (i === 0 ? 'T' : 'F');
+      html += `<button class="opt ${a === i ? 'selected' : ''}" onclick="pickOpt(${i})">
+        <span class="opt-letter">${letter}</span>
+        <span class="opt-text">${esc(o)}</span>
+      </button>`;
+    });
+    html += '</div>';
+  } else if (q.type === 'short' || q.type === 'essay'){
+    const h = q.type === 'essay' ? 200 : 110;
+    html += `<textarea class="input-field" style="margin-top:22px;height:${h}px;resize:none" placeholder="${q.type === 'essay' ? 'Compose your response...' : 'Type your answer...'}" oninput="setTextAnswer(this.value)">${a || ''}</textarea>`;
+  } else if (q.type === 'matching'){
+    const lefts = q.options || [];
+    const rights = q.correct || [];
+    const sel = a || {};
+    html += '<div style="margin-top:22px;display:flex;flex-direction:column;gap:12px">';
+    lefts.forEach((l, i) => {
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center">
+        <span style="font-size:14px;color:var(--txt)">${esc(l)}</span>
+        <select class="input-field" onchange="setMatch(${i}, this.value)">
+          <option value="">— Select —</option>
+          ${rights.map((r, j) => `<option value="${j}" ${sel[i] == j ? 'selected' : ''}>${esc(r)}</option>`).join('')}
+        </select>
+      </div>`;
+    });
+    html += '</div>';
+  } else if (q.type === 'fill'){
+    const ft = q.options[0] || '';
+    const parts = ft.split('___');
+    const ans = a || [];
+    html += '<div style="margin-top:22px;font-size:16px;line-height:2.2;color:var(--txt)">';
+    parts.forEach((p, i) => {
+      html += esc(p);
+      if (i < parts.length - 1){
+        html += `<input type="text" class="input-field" style="display:inline-block;width:auto;min-width:120px;padding:.5rem .75rem;margin:0 6px;vertical-align:middle" placeholder="..." value="${esc(ans[i]||'')}" oninput="setFill(${i}, this.value)" />`;
+      }
+    });
+    html += '</div>';
+  } else if (q.type === 'ordering'){
+    const items = q.options || [];
+    const cur = a || items.map((_, i) => i);
+    html += '<div style="margin-top:22px">';
+    html += '<p style="font-size:12.5px;color:var(--txt-3);margin-bottom:12px">Enter the correct position (1-' + items.length + ') for each item:</p>';
+    items.forEach((item, i) => {
+      const pos = (cur.indexOf(i) + 1) || (i + 1);
+      html += `<div style="display:flex;align-items:center;gap:14px;padding:8px 0">
+        <span style="flex:1;font-size:14px;color:var(--txt)">${esc(item)}</span>
+        <input type="number" min="1" max="${items.length}" value="${pos}" class="input-field" style="width:80px;padding:.4rem .6rem" onchange="setOrder(${i}, this.value)" />
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  $('q-display').innerHTML = html;
+  $('btn-prev').classList.toggle('hidden', qIdx === 0);
+  $('btn-next').classList.toggle('hidden', qIdx === quiz.questions.length - 1);
+  $('btn-submit').classList.toggle('hidden', qIdx !== quiz.questions.length - 1);
+  $('btn-hint').classList.toggle('hidden', !q.hint);
+  if(window.lucide) lucide.createIcons();
+}
+
+window.pickOpt = i => { answers[qIdx] = i; renderQ(); };
+window.setTextAnswer = v => { answers[qIdx] = v; };
+window.setMatch = (j, v) => {
+  if (!answers[qIdx]) answers[qIdx] = {};
+  answers[qIdx][j] = v;
+};
+window.setFill = (j, v) => {
+  if (!answers[qIdx]) answers[qIdx] = [];
+  answers[qIdx][j] = v;
+};
+window.setOrder = (j, v) => {
+  if (!answers[qIdx]) answers[qIdx] = [];
+  answers[qIdx][j] = parseInt(v, 10) - 1;
+};
+window.showHint = () => { const q = quiz.questions[qIdx]; if (q.hint) toast('💡 ' + q.hint); };
+window.nextQ = () => {
+  if (qIdx < quiz.questions.length - 1){
+    qIdx++;
+    renderQ();
+    AC.qStart[qIdx] = Date.now();
+  }
+};
+window.prevQ = () => {
+  if (qIdx > 0){
+    qIdx--;
+    renderQ();
+  }
+};
+
+// ============================================================
+// ENTERPRISE ANTI-CHEAT
+// ============================================================
+function attachAntiCheat(q){
+  AC.active = true;
+  document.addEventListener('visibilitychange', acTab);
+  window.addEventListener('blur', acBlur);
+  document.addEventListener('contextmenu', acCtx, true);
+  document.addEventListener('copy', acCopy, true);
+  document.addEventListener('cut', acCopy, true);
+  document.addEventListener('paste', acCopy, true);
+  document.addEventListener('keydown', acKeys, true);
+  document.addEventListener('dragstart', acDrag, true);
+  window.addEventListener('resize', acResize);
+  document.addEventListener('mouseleave', acMouse);
+  if (q.lockdown !== false){
+    document.addEventListener('fullscreenchange', acFull);
+    try { document.documentElement.requestFullscreen?.(); } catch(e){}
+  }
+}
+
+function detachAntiCheat(){
+  AC.active = false;
+  document.removeEventListener('visibilitychange', acTab);
+  window.removeEventListener('blur', acBlur);
+  document.removeEventListener('contextmenu', acCtx, true);
+  document.removeEventListener('copy', acCopy, true);
+  document.removeEventListener('cut', acCopy, true);
+  document.removeEventListener('paste', acCopy, true);
+  document.removeEventListener('keydown', acKeys, true);
+  document.removeEventListener('dragstart', acDrag, true);
+  window.removeEventListener('resize', acResize);
+  document.removeEventListener('mouseleave', acMouse);
+  document.removeEventListener('fullscreenchange', acFull);
+}
+
+function logViolation(type, detail){
+  const now = Date.now();
+  if (now - AC.lastViolation < AC.cooldownMs) return;
+  AC.lastViolation = now;
+  AC.events.push({ type, detail: detail||'', at: new Date().toISOString(), qIdx });
+  handleViolation(type);
+}
+
+function handleViolation(type){
+  if (AC.locked) return;
+  if (!quiz || quiz.proctoring === false) return;
+
+  AC.strikes++;
+  const el = $('ex-strikes');
+  el.classList.remove('hidden');
+  $('ex-strikes-n').textContent = AC.strikes;
+
+  const friendly = {
+    'tab-switch': 'Focus left the assessment window',
+    'window-blur': 'Assessment window lost focus',
+    'copy': 'Copy action blocked',
+    'cut': 'Cut action blocked',
+    'paste': 'Paste action blocked',
+    'context-menu': 'Right-click blocked',
+    'key-shortcut': 'Restricted keyboard shortcut',
+    'fullscreen-exit': 'Fullscreen was exited',
+    'mouse-leave': 'Cursor left the window',
+    'drag': 'Drag action blocked',
+    'resize': 'Window resize detected',
+    'devtools': 'Developer tools detected',
+    'screenshot': 'Screenshot attempt detected'
+  }[type] || type;
+
+  if (AC.strikes <= 2){
+    toast(`⚠️ Integrity alert ${AC.strikes}/5: ${friendly}`, 'error');
+    return;
+  }
+  if (AC.strikes < AC.maxStrikes){
+    triggerLockdown(friendly);
+    return;
+  }
+  toast('🚫 Final violation — submitting for review', 'error');
+  setTimeout(() => submitExam(), 700);
+}
+
+function triggerLockdown(reason){
+  if (AC.locked) return;
+  AC.locked = true;
+  const dur = AC.strikes === 3 ? 20 : 45;
+  const o = $('lockdown');
+  $('lockdown-reason').textContent = `Integrity violation: ${reason}. Your assessment has been paused.`;
+  o.classList.add('active');
+  const strikes = o.querySelectorAll('.strike');
+  strikes.forEach((s, i) => s.classList.toggle('on', i < AC.strikes));
+
+  let remaining = dur;
+  $('lockdown-timer').textContent = remaining;
+  if (AC.lockTimer) clearInterval(AC.lockTimer);
+  AC.lockTimer = setInterval(() => {
+    remaining--;
+    $('lockdown-timer').textContent = remaining;
+    if (remaining <= 0){
+      clearInterval(AC.lockTimer);
+      AC.locked = false;
+      o.classList.remove('active');
+      try { document.documentElement.requestFullscreen?.(); } catch(e){}
+      toast('Assessment unlocked. Continue.', 'success');
+    }
+  }, 1000);
+}
+
+function acTab(){ if (document.hidden) logViolation('tab-switch'); }
+function acBlur(){ logViolation('window-blur'); }
+function acCtx(e){ e.preventDefault(); logViolation('context-menu'); }
+function acCopy(e){ e.preventDefault(); logViolation(e.type === 'paste' ? 'paste' : e.type === 'cut' ? 'cut' : 'copy'); }
+function acDrag(e){ e.preventDefault(); logViolation('drag'); }
+function acResize(){ logViolation('resize'); }
+function acFull(){
+  if (!document.fullscreenElement && AC.active && quiz?.lockdown !== false){
+    logViolation('fullscreen-exit');
+  }
+}
+function acMouse(e){
+  if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight){
+    logViolation('mouse-leave');
+  }
+}
+function acKeys(e){
+  const k = e.key, ctrl = e.ctrlKey || e.metaKey, shift = e.shiftKey;
+
+  if (k === 'PrintScreen' || e.code === 'PrintScreen'){
+    e.preventDefault();
+    document.body.style.filter = 'blur(14px)';
+    setTimeout(() => document.body.style.filter = '', 1200);
+    logViolation('screenshot');
+    return;
+  }
+  if (k === 'F12' || (ctrl && shift && (k === 'I' || k === 'J' || k === 'C')) ||
+      (ctrl && (k === 'u' || k === 'U' || k === 's' || k === 'S' || k === 'p' || k === 'P'))){
+    e.preventDefault();
+    logViolation('devtools');
+    return;
+  }
+  if (ctrl && (k === 'c' || k === 'C')){ e.preventDefault(); logViolation('copy'); return; }
+  if (ctrl && (k === 'v' || k === 'V')){ e.preventDefault(); logViolation('paste'); return; }
+  if (ctrl && (k === 'x' || k === 'X')){ e.preventDefault(); logViolation('cut'); return; }
+  if (ctrl && (k === 'a' || k === 'A')){ e.preventDefault(); logViolation('key-shortcut'); return; }
+  if (ctrl && k === 'Tab'){ e.preventDefault(); logViolation('key-shortcut'); return; }
+}
+
+// ============================================================
+// SUBMIT
+// ============================================================
+window.submitExam = async function(){
+  if (submitInProgress) return;
+  submitInProgress = true;
+  clearInterval(timerInt);
+  detachAntiCheat();
+  try { if (document.exitFullscreen) document.exitFullscreen(); } catch(e){}
+  showLoad(true);
+
+  try {
+    let earned = 0, total = 0, bonus = 0, reviewRequired = false;
+    const details = [];
+    const qs = quiz.questions;
+
+    for (let i = 0; i < qs.length; i++){
+      const q = qs[i];
+      const a = answers[i];
+      let correct = false;
+      if (q.type === 'essay') reviewRequired = true;
+      else total += q.points;
+
+      if (q.type === 'multiple' || q.type === 'truefalse'){
+        correct = a === q.correct;
+      } else if (q.type === 'short'){
+        correct = a && a.toLowerCase().trim() === String(q.correct).toLowerCase().trim();
+      } else if (q.type === 'essay'){
+        correct = false;
+      } else if (q.type === 'matching'){
+        const sel = a || {}, right = q.correct || [];
+        let m = 0;
+        Object.entries(sel).forEach(([k, v]) => { if (v !== '' && parseInt(k,10) === parseInt(v,10)) m++; });
+        correct = m >= right.length * 0.7;
+      } else if (q.type === 'fill'){
+        const ans = a || [], cs = q.correct || [];
+        let fc = 0;
+        cs.forEach((c, idx) => { if (ans[idx] && ans[idx].toLowerCase().trim() === c.toLowerCase().trim()) fc++; });
+        correct = fc >= cs.length * 0.6;
+      } else if (q.type === 'ordering'){
+        const o = a || [], co = q.correct || [];
+        let oc = 0;
+        co.forEach((pos, idx) => { if (o[idx] === pos) oc++; });
+        correct = oc >= co.length * 0.7;
+      }
+      if (correct) earned += q.points;
+      details.push({
+        question: q.text,
+        correct,
+        answer: a !== undefined ? a : null,
+        points: q.points,
+        earned: correct ? q.points : 0,
+        needsReview: q.type === 'essay'
+      });
+    }
+
+    const percentage = total > 0 ? Math.min(100, Math.round((earned / total) * 100)) : 0;
+    const passed = !reviewRequired && percentage >= quiz.passingMark;
+
+    await addDoc(collection(db,'submissions'), {
+      studentId: student.uid,
+      studentName: student.name,
+      studentClass: student.cls,
+      sdmsCode: student.sdms,
+      quizId: quiz.id,
+      quizTitle: quiz.title,
+      percentage, passed,
+      passingMark: quiz.passingMark,
+      resultStatus: 'provisional',
+      scoringSource: 'client-side',
+      reviewRequired,
+      details,
+      violations: AC.strikes,
+      integrityEvents: AC.events,
+      fastAnswers: AC.fastAnswers,
+      timeSpent: Math.round((Date.now() - (AC.qStart[0]||Date.now())) / 1000),
+      date: serverTimestamp()
+    });
+
+    // Update student profile
+    const ur = doc(db,'users',student.uid);
+    const us = await getDoc(ur);
+    if (us.exists()){
+      const d = us.data();
+      const pts = (d.points||0) + earned;
+      let st = (d.streak||0) + (passed ? 1 : 0);
+      if (!passed) st = 0;
+      const lv = Math.floor(pts/100) + 1;
+      let badges = d.badges || [];
+      if (percentage >= 90 && !badges.includes('🏆 Master')) badges.push('🏆 Master');
+      if (st >= 5 && !badges.includes('🔥 Streak5')) badges.push('🔥 Streak5');
+      if (earned === total && !badges.includes('💯 Perfect')) badges.push('💯 Perfect');
+      await updateDoc(ur, { points: pts, streak: st, level: lv, badges, quizzesTaken: increment(1) });
+    }
+
+    // Result UI
+    $('r-quiz').textContent = quiz.title;
+    $('r-score').textContent = percentage + '%';
+    const icon = $('r-icon');
+    icon.style.background = passed ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)';
+    icon.innerHTML = `<i data-lucide="${passed?'trophy':'award'}" style="width:36px;height:36px;color:${passed?'#34D399':'#F59E0B'}"></i>`;
+    $('r-status').innerHTML = `<span style="color:${reviewRequired ? '#FCD34D' : passed ? '#34D399' : '#F59E0B'}">${reviewRequired ? 'Teacher review required' : passed ? 'Passed' : 'More practice recommended'}</span>`;
+    $('r-feedback').innerHTML = feedbackText(percentage, quiz.subject, details);
+
+    goto('result');
+    quiz = null;
+    if(window.lucide) lucide.createIcons();
+  } catch(err){
+    console.error(err);
+    toast('Submission failed: ' + err.message, 'error');
+  } finally {
+    submitInProgress = false;
+    showLoad(false);
+  }
+};
+
+function feedbackText(score, subject, details){
+  const weak = details.filter(d => !d.correct && !d.needsReview).slice(0, 3);
+  const strong = details.filter(d => d.correct).slice(0, 3);
+  const pending = details.filter(d => d.needsReview);
+  let f = '';
+  if (score >= 80) f += `<p style="color:#34D399;font-weight:600;margin-bottom:8px">Strong result</p><p>Your responses show good progress in ${esc(subject)}.</p>`;
+  else if (score >= 60) f += `<p style="color:#34D399;font-weight:600;margin-bottom:8px">Good effort</p><p>Solid grasp of ${esc(subject)}, with room for improvement.</p>`;
+  else if (score >= 40) f += `<p style="color:#F59E0B;font-weight:600;margin-bottom:8px">Keep going</p><p>More practice in ${esc(subject)} will help.</p>`;
+  else f += `<p style="color:#FCA5A5;font-weight:600;margin-bottom:8px">Try again</p><p>Review your notes and attempt the quiz again.</p>`;
+  if (weak.length) f += `<p style="margin-top:10px;font-size:12.5px;color:#FCD34D">Focus on: ${weak.map(d => esc(d.question)).join(', ')}</p>`;
+  if (strong.length && score >= 50) f += `<p style="margin-top:8px;font-size:12.5px;color:#34D399">Strong in: ${strong.map(d => esc(d.question)).join(', ')}</p>`;
+  if (pending.length) f += `<p style="margin-top:8px;font-size:12.5px;color:#FCD34D">Written responses need teacher review.</p>`;
+  return f;
+}
+
+window.viewReport = async id => {
+  const s = await getDoc(doc(db,'submissions',id));
+  if (!s.exists()){ toast('Not found', 'error'); return; }
+  const d = s.data();
+  const det = d.details || [];
+  let html = `<div class="modal-bg" id="m" onclick="if(event.target===this)this.remove()" style="position:fixed;inset:0;z-index:9999;background:rgba(5,11,8,.9);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="background:linear-gradient(180deg,rgba(27,56,42,.95),rgba(11,26,18,.98));border:1px solid var(--border-2);border-radius:20px;padding:32px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px">
+        <div>
+          <div style="font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#34D399;font-weight:700">Detailed Report</div>
+          <h2 class="font-serif" style="font-size:26px;margin-top:4px">${esc(d.studentName)}</h2>
+        </div>
+        <button onclick="this.closest('#m').remove()" style="padding:6px;color:var(--txt-3)"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px">
+        <div class="surface-flat" style="padding:14px;text-align:center"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-4);margin-bottom:6px">Assessment</div><div style="font-size:13px;font-weight:600">${esc(d.quizTitle)}</div></div>
+        <div class="surface-flat" style="padding:14px;text-align:center"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-4);margin-bottom:6px">Score</div><div style="font-size:22px;font-weight:700;color:${d.percentage>=50?'#34D399':'#FCA5A5'}">${d.percentage}%</div></div>
+        <div class="surface-flat" style="padding:14px;text-align:center"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-4);margin-bottom:6px">Status</div><div style="font-size:12px;font-weight:600;color:#FCD34D">Provisional</div></div>
+      </div>
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-4);margin-bottom:12px">Response Breakdown</div>
+      <div style="display:flex;flex-direction:column;gap:8px">`;
+  det.forEach((x, i) => {
+    const bg = x.correct ? 'rgba(16,185,129,.06)' : 'rgba(220,38,38,.06)';
+    const bd = x.correct ? 'rgba(16,185,129,.2)' : 'rgba(220,38,38,.2)';
+    html += `<div style="padding:12px;border-radius:10px;background:${bg};border:1px solid ${bd};display:flex;gap:12px;align-items:flex-start">
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--txt-3);flex-shrink:0">#${String(i+1).padStart(2,'0')}</span>
+      <span style="flex:1;font-size:13px;color:var(--txt-2)">${esc(x.question||'')}</span>
+      <span style="font-size:12px;font-weight:600;color:${x.correct?'#34D399':'#FCA5A5'}">${x.correct?'Correct':'Incorrect'}</span>
+    </div>`;
+  });
+  html += `</div>
+      <button onclick="this.closest('#m').remove()" class="btn btn-primary" style="width:100%;margin-top:20px">Close</button>
+    </div></div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  if(window.lucide) lucide.createIcons();
+};
+
+window.goHome = () => {
+  quiz = null;
+  goto('dash');
+  if (student) loadDash();
+};
+
+// ============================================================
+// INIT
+// ============================================================
+if(window.lucide) lucide.createIcons();
+window.addEventListener('beforeunload', () => { detachAntiCheat(); });
+</script>
+</body>
+</html>
